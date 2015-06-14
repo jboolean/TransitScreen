@@ -24,7 +24,7 @@ function generate_blocks() {
     }
 
     // For bus or rail, output data this way
-    if(blocks[key].type == 'subway' || blocks[key].type == 'bus'){      
+    if(blocks[key].type == 'subway' || blocks[key].type == 'bus'){
 
       output += '<div class="' + containerclass + '">';
       output += ' <div class="' + classname_base + '_location">';
@@ -33,7 +33,16 @@ function generate_blocks() {
       output += ' </div>';
       output += ' <table id="' + classname_base + '_table">';
 
-      $.each(blocks[key].vehicles, function(v,vehicle){
+      // Sometimes insteady of a vehicles array it is the route.
+      var vehicles = blocks[key].vehicles;
+      if (!Array.isArray(vehicles)) {
+        // There is no fix, the data are missing, just skip.
+        console.debug(vehicles);
+        vehicles = [];
+        console.debug('Hit vehicles is actually the route bug.');
+      }
+
+      $.each(vehicles, function(v,vehicle){
 
         var vout = '';
 
@@ -84,17 +93,17 @@ function generate_blocks() {
               vout += '       <span class="' + classname_base + '_min">MINUTE' + pluralize(prediction) + '</span>';
               vout += '     </td>';
             }
-            
+
             // 2nd & 3rd predictions
             if(p >= 1 && p <= 2) {
               subsequent += '       <h4>' + prediction + '</h4>';
             }
 
           });
-          
+
           vout += '     <td class="' + classname_base + '_table_upcoming">' + subsequent + '</td>';
           vout += '   </tr>';
-          
+
           // Get rid of buses over block limit
           if(blocks[key].type == 'bus' && (vcount >= buslimit)){
             vout = '';
@@ -105,14 +114,14 @@ function generate_blocks() {
         }
       });
       output += '   </table>';
-      output += '</div>'; 
+      output += '</div>';
     }
 
     // For CaBi, output data this way
     if(blocks[key].type == 'cabi'){
 
       var bikelist = '';
-      
+
       // For each station, assemble the table row
       $.each(blocks[key].stations, function(c, cabistation) {
         bikelist += '   <tr class="cabi_data">';
@@ -134,7 +143,7 @@ function generate_blocks() {
       output += '   <tr class="' + classname_base + '_header">';
       output += '     <td colspan="2">';
       output += '       <span class="cabi_icon">&nbsp;</span>';
-      output += '     </td>';     
+      output += '     </td>';
       output += '     <td class="bikes">';
       output += '       <h4>BIKES</h4>';
       output += '     </td>';
@@ -144,15 +153,15 @@ function generate_blocks() {
       output += '   </tr>';
       output += bikelist;
       output += ' </table>';
-      output += '</div>';      
+      output += '</div>';
     }
 
     if(blocks[key].type == 'custom'){
       output += '<div id="block-' + blocks[key].id + '" class="' + containerclass + '">';
       output +=   blocks[key].custom_body;
-      output += '</div>';   
+      output += '</div>';
     }
-    
+
     if('vehicles' in blocks[key] || blocks[key].type == 'cabi' || blocks[key].type == 'custom'){
       if($('#block-' + blocks[key].id).length > 0){
         $('#block-' + blocks[key].id).html(output);
@@ -166,7 +175,7 @@ function generate_blocks() {
       $('#block-' + blocks[key].id).empty();
     }
   }
-  reorder_blocks(); 
+  reorder_blocks();
 }
 
 function reorder_blocks() {
@@ -246,8 +255,8 @@ function get_suffix(route, agency){
   if(agency == 'Metrobus') {
     return 'wmata';
   }
-  
-  return agency;  
+
+  return agency;
 }
 
 function pluralize(num) {
@@ -258,28 +267,28 @@ function pluralize(num) {
 }
 
 function refresh_data() {
-  var now = Math.round(new Date().getTime() / 1000);  
+  var now = Math.round(new Date().getTime() / 1000);
   // query the server for the new data
   //$.getJSON("http://localhost/index.php/update/json/" + screen_id,function(json){
   //$.getJSON("../../update/json/" + screen_id,function(json){
   //$.getJSON("http://localhost/scripts/json.js",function(json){
   $.getJSON(queryurl,function(json){
     if(json.screen_version > screenversion) {
-      
+
       $.get(document.URL, function(newpage){
         console.log(newpage);
         newpage = newpage.replace('<html>','');
         newpage = newpage.replace('</html>','');
         $('html').html(newpage);
-      })        
+      })
       .error(function() { console.log("error"); })
-      //window.location.reload(); 
+      //window.location.reload();
     }
     lastupdate = now;
     //blocks.updated = now; // Set the updated time for the local dataset
-    
+
     $('#loading-box').remove();
-    
+
     // For each stop ...
     $.each(json.stops,function(i,stop){
       thisid = stop.id;
@@ -290,7 +299,7 @@ function refresh_data() {
     // Call the function to create or recreate the blocks based
     // on the updated data.
     generate_blocks();
-    
+
   })
   .error(function() { // This executes if the script cannot get the updated data.
     //alert("error");
@@ -303,7 +312,7 @@ function refresh_data() {
 /*
 function time_tracker(id, lastcheck, iteration) {
   // each minute, automatically decrement each prediction
-  // in the local data.  
+  // in the local data.
   var removeid = new Array();
   var removevehicle = new Array();
 
@@ -313,13 +322,13 @@ function time_tracker(id, lastcheck, iteration) {
     console.log('Minute mark');
     blocks[id].updated = now;
 
-    $.each(blocks[id].vehicles, function(v, vehicle) {      
+    $.each(blocks[id].vehicles, function(v, vehicle) {
       removevehicle = new Array();
       removeid = new Array();
       $.each(vehicle.predictions, function(p, prediction) {
 
         if(prediction > 0){
-          blocks[id].vehicles[v].predictions[p]--;          
+          blocks[id].vehicles[v].predictions[p]--;
         }
         else {
           // Add the id to the array of ids whose elements
@@ -341,7 +350,7 @@ function time_tracker(id, lastcheck, iteration) {
         $('#block-' + id + '-vehicle-' + v).empty();
         removevehicle.push(v);
         //blocks[id].vehicles.splice(v,1);
-      }      
+      }
     });
 
     removevehicle.reverse();
@@ -350,7 +359,7 @@ function time_tracker(id, lastcheck, iteration) {
       console.log('Now removing bus ' + bus);
       blocks[id].vehicles.splice(bus,1);
     });
-  }  
+  }
 }
 */
 
@@ -368,7 +377,7 @@ $(document).ready(function () {
 
 // This triggers the data update
 $(document).everyTime(45000, function(){
-  
+
   var url = queryurl + '?' +  new Date().getTime();
 
   $.getJSON(url,function(json){
@@ -408,7 +417,7 @@ $(document).everyTime(5000, function(){
       $('#block-' + key).empty();
       continue;
     }
-    if((now - blocks[key].updated) > 4){      
+    if((now - blocks[key].updated) > 4){
       time_tracker(key, now, 0);
     }
   }

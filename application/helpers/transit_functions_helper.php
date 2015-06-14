@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Function: clean_destination
  * @param string $s
@@ -55,14 +54,14 @@ function get_rail_predictions($station_id, $api_key){
 
   // For each prediction, put the data into an array to return
   for($t = 0; $t < count($predictions); $t++){
-  
+
     $newitem['stop_name'] = (string) $predictions[$t]->LocationName;
     $newitem['agency'] = 'metrorail';
-    $newitem['route'] = (string) $predictions[$t]->Line;  
+    $newitem['route'] = (string) $predictions[$t]->Line;
     $newitem['destination'] = (string) $predictions[$t]->DestinationName;
 
     // Ignore "No passengers" and no destination
-    if (($newitem['destination'] != '') && ($newitem['route'] != 'No')) { 
+    if (($newitem['destination'] != '') && ($newitem['route'] != 'No')) {
       switch ((string) $predictions[$t]->Min) {
         case 'ARR':
         case 'BRD':
@@ -135,24 +134,24 @@ function get_bus_predictions($stop_id,$api_key,$agency) {
   switch ($agency) {
     case 'wmata':
     case 'metrobus':
-      $out = get_metrobus_predictions($stop_id, $api_key);      
+      $out = get_metrobus_predictions($stop_id, $api_key);
       break;
     case 'dc-circulator':
-    case 'circulator':      
-      $out = get_nextbus_predictions($stop_id, 'dc-circulator');      
+    case 'circulator':
+      $out = get_nextbus_predictions($stop_id, 'dc-circulator');
       break;
-    case 'pgc':      
-      $out = get_nextbus_predictions($stop_id, 'pgc');      
+    case 'pgc':
+      $out = get_nextbus_predictions($stop_id, 'pgc');
       break;
-    case 'umd':      
-      $buses = get_nextbus_predictions($stop_id, 'umd');      
-      break; 
+    case 'umd':
+      $buses = get_nextbus_predictions($stop_id, 'umd');
+      break;
     case 'art':
       $out = get_connexionz_predictions($stop_id, 'art');
       break;
-  }  
+  }
 
-  return $out;    
+  return $out;
 }
 
 /**
@@ -167,9 +166,9 @@ function get_bus_predictions($stop_id,$api_key,$agency) {
  *
  */
 function get_metrobus_predictions($stop_id,$api_key){
-  $out = '';
+  $out = [];
   // Call the API
-  if(!($busxml = simplexml_load_file("http://api.wmata.com/NextBusService.svc/Predictions?StopID=$stop_id&api_key=" . $api_key))){
+  if(!($busxml = simplexml_load_file("http://api.wmata.com/NextBusService.svc/Predictions?StopID=$stop_id&api_key=$api_key"))){
     return false;
   }
   $stop_name = (string) $busxml->StopName;
@@ -199,14 +198,14 @@ function get_metrobus_predictions($stop_id,$api_key){
  * @return array
  *
  * Get the NextBus predictions for this bus stop and return the data in an array.
- * This is what we will use for the DC Circulator, Shuttle UM and Prince George's County's TheBus. 
+ * This is what we will use for the DC Circulator, Shuttle UM and Prince George's County's TheBus.
  *
  */
 function get_nextbus_predictions($stop_id,$agency_tag){
 
   if($agency_tag == 'dc-circulator'){
     $agency = 'Circulator';
-    $busxml = simplexml_load_file("http://webservices.nextbus.com/service/publicXMLFeed?command=predictions&a=$agency_tag&stopId=$stop_id");  
+    $busxml = simplexml_load_file("http://webservices.nextbus.com/service/publicXMLFeed?command=predictions&a=$agency_tag&stopId=$stop_id");
   }
   elseif($agency_tag == 'pgc'){
 	  $agency = 'pgc';
@@ -214,18 +213,18 @@ function get_nextbus_predictions($stop_id,$agency_tag){
   }
   elseif($agency_tag == 'umd'){
     $agency = 'umd';
-    $busxml = simplexml_load_file("http://webservices.nextbus.com/service/publicXMLFeed?command=predictions&a=$agency_tag&stopId=$stop_id");  
-  } 
+    $busxml = simplexml_load_file("http://webservices.nextbus.com/service/publicXMLFeed?command=predictions&a=$agency_tag&stopId=$stop_id");
+  }
 
   //foreach predictions
-  foreach($busxml->predictions as $pred){  
+  foreach($busxml->predictions as $pred){
     $stopname = (string) $pred->attributes()->stopTitle;
     $routename = (string) $pred->attributes()->routeTitle;
     //foreach direction
     foreach($pred->direction as $dir){
       $destination = (string) $dir->attributes()->title;
       //foreach prediction
-      foreach($dir->prediction as $p){        
+      foreach($dir->prediction as $p){
         unset($newitem);
         $newitem['stop_name'] = $stopname;
         $newitem['agency'] = $agency;
@@ -268,7 +267,7 @@ function get_connexionz_predictions($stop_id,$agency) {
       $newitem['route'] = (string) $route['RouteNo'];
       $newitem['destination'] = (string) $route['Name'];
       $newitem['prediction'] = (int) $trip['ETA'];
-      $out[] = $newitem;      
+      $out[] = $newitem;
     }
   }
 
@@ -293,7 +292,7 @@ function get_connexionz_predictions($stop_id,$agency) {
  *
  * Given a CaBi station id, get the station data and return an array with the
  * station status, e.g. number of bikes, number of docks, and the station name.
- * 
+ *
  */
 function get_cabi_status($station_id){
   // Load the XML file for the entire system.

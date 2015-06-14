@@ -105,7 +105,7 @@ class Update extends CI_Controller {
     // Load the Update model and the screen model
     $this->load->model('update_model');
     $update = new Update_model();
-    
+
     $this->load->model('screen_model');
     $screen = new Screen_model();
 
@@ -154,7 +154,7 @@ class Update extends CI_Controller {
         unset($bike);
         $bikes = array();
 
-        unset($override);        
+        unset($override);
 
         // For each of the agency-stop pairs for this block...
         foreach($stops as $stop){
@@ -164,7 +164,7 @@ class Update extends CI_Controller {
           $exclusions = array();
           if(isset($stop['exclusions'])){
             $exclusions = explode(',', $stop['exclusions']);
-          }          
+          }
 
           // For this agency-stop pair, check to see what mode it is and then
           // call the approriate API function.
@@ -174,7 +174,7 @@ class Update extends CI_Controller {
 
               // Get the bus prediction data back.  This get_bus_predictions
               // function covers ART, WMATA, DC Circulator, Prince George's TheBus and Shuttle UM
-              $set = get_bus_predictions($stop['stop_id'],$wmata_key,$stop['agency']);              
+              $set = get_bus_predictions($stop['stop_id'],$wmata_key,$stop['agency']);
               if(isset($set[0])){
                 // Loop through the results.  If the bus line is not in the
                 // exclusions array, add it to a new set.  We will abandon the
@@ -183,11 +183,11 @@ class Update extends CI_Controller {
                   if(!in_array(strtoupper($b['route']),$exclusions)){
                     $newset[] = $b;
                   }
-                }                
+                }
                 $vehicles[] = $newset;
-              }              
+              }
               break;
-            case 'subway':              
+            case 'subway':
               // Get predictions from WMATA for rail station with id $stop['stop_id').
               $vehicles[] = get_rail_predictions($stop['stop_id'],$wmata_key);
               break;
@@ -195,7 +195,7 @@ class Update extends CI_Controller {
               // For each bike station, get the status.  Notice that the data
               // will be put into the $bikes array since each block may have
               // multiple CaBi stations.
-              $bikes[] = get_cabi_status($stop['stop_id']);              
+              $bikes[] = get_cabi_status($stop['stop_id']);
               break;
             case 'custom':
               // This is where the custom block data goes.  There is no clean up.
@@ -203,7 +203,7 @@ class Update extends CI_Controller {
               break;
           }
         }
-        
+
         // Combine the different agency predictions for this stop
         // into a single array and sort by time.  Make sure you have actual
         // predictions first!
@@ -211,12 +211,12 @@ class Update extends CI_Controller {
           if($this->_get_agency_type($stop['agency']) == 'bus') {
             // Combine multi-agency data for buses, then combine same routes
             $stopdata = combine_agencies($vehicles);
-            $stopdata = $this->_combine_duplicates($stopdata);            
+            $stopdata = $this->_combine_duplicates($stopdata);
           }
           elseif ($this->_get_agency_type($stop['agency']) == 'subway') {
             // Combine same routes data for subway
             $stopdata = $vehicles[0];
-            $stopdata = $this->_combine_duplicates($stopdata);            
+            $stopdata = $this->_combine_duplicates($stopdata);
           }
           else {
             $stopdata = $vehicles[0];
@@ -257,10 +257,10 @@ class Update extends CI_Controller {
               'type'      => $this->_get_agency_type($stop['agency']),
               'column'    => (int) $block->column,
               'order'     => (int) $block->position,
-              'stations'  => $bikes              
+              'stations'  => $bikes
             );
         }
-        else {
+        else if (isset($stopdata)) {
           $stopdata = array(
               'id'        => $block->id,
               'name'      => clean_destination($stopname),
@@ -285,14 +285,18 @@ class Update extends CI_Controller {
 
         // Add all the stop data for this block to the stops array in the $update
         // variable.
-        $update->stops[] = $stopdata;
+        if (isset($stopdata)) {
+          $update->stops[] = $stopdata;
+          unset($stopdata);
+        }
 
       }
       // Print out the entire $update variable encoded as JSON
+      header('Content-type: application/json');
       print json_encode($update);
     }
 
-    
+
   }
 
   /**
@@ -316,14 +320,14 @@ class Update extends CI_Controller {
    */
   private function _combine_duplicates($predictions){
     // This array will hold the returned data.
-    $newout = array();    
+    $newout = array();
 
     for($p = 0; $p < count($predictions); $p++){
       // Hash together the route and the destination.  Since some buses have the
       // same route number, but different destinations, we will have to treat
       // such buses as separate lines.
       $rdhash = hash('adler32', $predictions[$p]['route'] . $predictions[$p]['destination']);
-      // If the route already exists, just add the prediction      
+      // If the route already exists, just add the prediction
       if(isset($newout[$rdhash])){
         $newout[$rdhash]['predictions'][] = $predictions[$p]['prediction'];
       }
@@ -336,9 +340,9 @@ class Update extends CI_Controller {
           );
       }
     }
-    
+
     $io = array();
-    
+
     // Replace the hash keys with a normal integer index
     foreach($newout as $item){
       $io[] = $item;
@@ -357,12 +361,12 @@ class Update extends CI_Controller {
    * This helps associate different agencies that are using the same mode.   *
    */
   private function _get_agency_type($agency) {
-    
+
     switch(strtolower($agency)){
       case 'metrobus':
       case 'art':
       case 'pgc':
-      case 'umd': 
+      case 'umd':
       case 'circulator':
       case 'dc-circulator':
         return 'bus';
@@ -385,7 +389,7 @@ class Update extends CI_Controller {
    * updated data.
    *
    * The database functions here are from CodeIgniter' version of Active Record.
-   * 
+   *
    */
   private function _update_timestamp($id){
 
