@@ -1,13 +1,14 @@
 var screenversion = 0;  // To be written by php
-var lastupdate = 0;     // To be updated by json
+                        // To be updated by json
 //var blankout = 100;   // After losing a connection, the screen
                         // will autodecrement each prediction for
                         // this number of minutes.
 var buslimit = 99;      // Bus limit per block
 var firstload = true;
+var UPDATE_FREQUENCY = 30;
 var queryurl = '../../update/json/' + screen_id; //e.g. http://localhost/index.php/update/json/1
 
-var blocks = new Array();    // Array of stop and arrival data
+var blocks = [];    // Array of stop and arrival data
 
 function generate_blocks() {
   // loop through local data and create templates.
@@ -259,6 +260,18 @@ function get_suffix(route, agency){
   return agency;
 }
 
+var load_new_version = function() {
+  $.get(document.URL, function(newpage){
+    console.log(newpage);
+    newpage = newpage.replace('<html>','');
+    newpage = newpage.replace('</html>','');
+    $('html').html(newpage);
+  })
+  .error(function() {
+    console.log("error");
+  })
+};
+
 function pluralize(num) {
   if(num != 1){
     return 'S';
@@ -266,48 +279,57 @@ function pluralize(num) {
   return '';
 }
 
-function refresh_data() {
-  var now = Math.round(new Date().getTime() / 1000);
-  // query the server for the new data
-  //$.getJSON("http://localhost/index.php/update/json/" + screen_id,function(json){
-  //$.getJSON("../../update/json/" + screen_id,function(json){
-  //$.getJSON("http://localhost/scripts/json.js",function(json){
-  $.getJSON(queryurl,function(json){
-    if(json.screen_version > screenversion) {
+var refresh_data = function(firstRun){
 
-      $.get(document.URL, function(newpage){
-        console.log(newpage);
-        newpage = newpage.replace('<html>','');
-        newpage = newpage.replace('</html>','');
-        $('html').html(newpage);
-      })
-      .error(function() { console.log("error"); })
-      //window.location.reload();
-    }
-    lastupdate = now;
-    //blocks.updated = now; // Set the updated time for the local dataset
+  var url = queryurl + '?' +  Date.now();
 
-    $('#loading-box').remove();
+  $.getJSON(url, function(json){
+    // If the script can get the file, do the following...
 
-    // For each stop ...
-    $.each(json.stops,function(i,stop){
-      thisid = stop.id;
-      blocks[thisid] = stop; // Update each block with new data.
-      blocks[thisid].updated = now;
-    });
+      // Regenerate the templates from the presented structure
+      if(firstRun){
+        screenversion = json.screen_version;
+      }
 
-    // Call the function to create or recreate the blocks based
-    // on the updated data.
-    generate_blocks();
+      if(!json.sleep) {
 
+        var now = Math.round(Date.now() / 1000);
+
+        if(json.screen_version > screenversion) {
+          load_new_version();
+        }
+
+        //blocks.updated = now; // Set the updated time for the local dataset
+
+        $('#loading-box').remove();
+
+        // For each stop ...
+        $.each(json.stops,function(i,stop){
+          thisid = stop.id;
+          blocks[thisid] = stop; // Update each block with new data.
+          blocks[thisid].updated = now;
+        });
+
+        // Call the function to create or recreate the blocks based
+        // on the updated data.
+        generate_blocks();
+
+        // write the new data to the local data store
+        // add/update a "last updated" property to each object
+
+      }
+      else {                // If the screen should sleep
+        $('.col').empty();  // clear everything out.
+      }
   })
   .error(function() { // This executes if the script cannot get the updated data.
-    //alert("error");
+    // Update the block rendering since the auto-decrementer
+    // will kick in.
+    //generate_blocks();
+    console.error('Failed to get new data.');
   });
 
-  // write the new data to the local data store
-  // add/update a "last updated" property to each object
-}
+};
 
 /*
 function time_tracker(id, lastcheck, iteration) {
@@ -365,42 +387,9 @@ function time_tracker(id, lastcheck, iteration) {
 
 // Do this as the initial load
 $(document).ready(function () {
-  $.getJSON(queryurl,function(json){
-    if(screenversion == 0){
-      screenversion = json.screen_version;
-    }
-    refresh_data();
-  })
-  .error(function() {
-  });
-});
-
-// This triggers the data update
-$(document).everyTime(45000, function(){
-
-  var url = queryurl + '?' +  new Date().getTime();
-
-  $.getJSON(url,function(json){
-    // If the script can get the file, do the following...
-
-      // Regenerate the templates from the presented structure
-      if(screenversion == 0){
-        screenversion = json.screen_version;
-      }
-
-      if(json.sleep == false) {
-        refresh_data();
-      }
-      else {                // If the screen should sleep
-        $('.col').empty();  // clear everything out.
-      }
-  })
-  .error(function() { // This executes if the script cannot get the updated data.
-    // Update the block rendering since the auto-decrementer
-    // will kick in.
-    //generate_blocks();
-  });
-
+  refresh_data(true);
+  // This triggers the data update
+  setInterval(refresh_data, UPDATE_FREQUENCY * 100);
 });
 
 // Run this timer to autodecrement
