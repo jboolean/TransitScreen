@@ -260,18 +260,6 @@ function get_suffix(route, agency){
   return agency;
 }
 
-var load_new_version = function() {
-  $.get(document.URL, function(newpage){
-    console.log(newpage);
-    newpage = newpage.replace('<html>','');
-    newpage = newpage.replace('</html>','');
-    $('html').html(newpage);
-  })
-  .error(function() {
-    console.log("error");
-  })
-};
-
 function pluralize(num) {
   if(num != 1){
     return 'S';
@@ -294,10 +282,6 @@ var refresh_data = function(firstRun){
       if(!json.sleep) {
 
         var now = Math.round(Date.now() / 1000);
-
-        if(json.screen_version > screenversion) {
-          load_new_version();
-        }
 
         //blocks.updated = now; // Set the updated time for the local dataset
 
@@ -389,7 +373,7 @@ function time_tracker(id, lastcheck, iteration) {
 $(document).ready(function () {
   refresh_data(true);
   // This triggers the data update
-  setInterval(refresh_data, UPDATE_FREQUENCY * 100);
+  setInterval(refresh_data, UPDATE_FREQUENCY * 1000);
 });
 
 // Run this timer to autodecrement
