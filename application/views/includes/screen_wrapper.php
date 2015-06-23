@@ -45,7 +45,6 @@
           })
           .hide()
           .load(function() {
-            debugger;
             $('#frame-' + oldVersion).remove();
             latestVersion = newVersion;
             $(this).show();
