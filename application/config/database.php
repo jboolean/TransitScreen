@@ -45,13 +45,18 @@
 | the active record class
 */
 
+// Database should be an environment variable
+// DATABASE_URL = [database type]://[username]:[password]@[host]:[port]/[database name]
+$matches = [];
+preg_match('/^(postgres):\/\/(\S*):(\S*)@(\S+):(\d{0,4})\/(\S+)/', $_ENV['DATABASE_URL'], $matches);
+
 $active_group = 'default';
 $active_record = TRUE;
 
-$db['default']['hostname'] = 'localhost';
-$db['default']['username'] = 'postgres';
-$db['default']['password'] = 'your_password';
-$db['default']['database'] = 'transitscreens';
+$db['default']['hostname'] = $matches[4];
+$db['default']['username'] = $matches[2];
+$db['default']['password'] = $matches[3];
+$db['default']['database'] = $matches[6];
 $db['default']['dbdriver'] = 'postgre';
 $db['default']['dbprefix'] = '';
 $db['default']['pconnect'] = TRUE;
