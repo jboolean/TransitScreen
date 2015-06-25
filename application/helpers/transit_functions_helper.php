@@ -156,7 +156,7 @@ function get_bus_predictions($stop_id,$keys,$agency) {
       $out = get_nextbus_predictions($stop_id, 'pgc');
       break;
     case 'umd':
-      $buses = get_nextbus_predictions($stop_id, 'umd');
+      $out = get_nextbus_predictions($stop_id, 'umd');
       break;
     case 'art':
       $out = get_connexionz_predictions($stop_id, 'art');
@@ -249,6 +249,10 @@ function get_oba_predictions($stop_id, $deployment, $api_key) {
     if ($stopTime == 0) {
       $stopTime = $visit->scheduledDepartureTime;
     }
+    $minutes = (int) round(((float)$stopTime - ((float)time() * 1000))/(60*1000));
+    if ($minutes < 0) {
+      continue;
+    }
     $routeId = $visit->routeId;
     $route = $busxml->xpath("//references/routes/route[id = '$routeId']")[0];
     $agencyId = (string) $route->agencyId;
@@ -258,7 +262,7 @@ function get_oba_predictions($stop_id, $deployment, $api_key) {
     $newitem['agency'] = (string) $agency->name;
     $newitem['route'] = (string) $visit->routeShortName;
     $newitem['destination'] = (string) $visit->tripHeadsign;
-    $newitem['prediction'] = (int) round(((float)$stopTime - ((float)time() * 1000))/(60*1000));
+    $newitem['prediction'] = $minutes;
     $newitem['direction'] = (string) $stop->direction;
     $out[] = $newitem;
   }
@@ -292,6 +296,7 @@ function get_nextbus_predictions($stop_id,$agency_tag){
     $agency = 'umd';
     $busxml = simplexml_load_file("http://webservices.nextbus.com/service/publicXMLFeed?command=predictions&a=$agency_tag&stopId=$stop_id");
   }
+
 
   //foreach predictions
   foreach($busxml->predictions as $pred){
