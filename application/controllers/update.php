@@ -120,7 +120,10 @@ class Update extends CI_Controller {
     $update->screen_name = $screendata['settings'][0]->name;
     $update->screen_version = $screendata['settings'][0]->screen_version;
 
-    $wmata_key = $screendata['settings'][0]->wmata_key;
+    $keys = [
+      'wmata' => $screendata['settings'][0]->wmata_key,
+      'rideon' => $screendata['settings'][0]->rideon_key
+    ];
 
     // Update the last_checkin value for this screen.  This allows us to ensure
     // that our screens are regularly calling for updates.
@@ -174,7 +177,7 @@ class Update extends CI_Controller {
 
               // Get the bus prediction data back.  This get_bus_predictions
               // function covers ART, WMATA, DC Circulator, Prince George's TheBus and Shuttle UM
-              $set = get_bus_predictions($stop['stop_id'],$wmata_key,$stop['agency']);
+              $set = get_bus_predictions($stop['stop_id'],$keys,$stop['agency']);
               if(isset($set[0])){
                 // Loop through the results.  If the bus line is not in the
                 // exclusions array, add it to a new set.  We will abandon the
@@ -189,7 +192,7 @@ class Update extends CI_Controller {
               break;
             case 'subway':
               // Get predictions from WMATA for rail station with id $stop['stop_id').
-              $vehicles[] = get_rail_predictions($stop['stop_id'],$wmata_key);
+              $vehicles[] = get_rail_predictions($stop['stop_id'],$keys['wmata']);
               break;
             case 'cabi':
               // For each bike station, get the status.  Notice that the data
@@ -369,6 +372,7 @@ class Update extends CI_Controller {
       case 'umd':
       case 'circulator':
       case 'dc-circulator':
+      case 'rideon':
         return 'bus';
       case 'cabi':
         return 'cabi';

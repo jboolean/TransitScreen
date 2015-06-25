@@ -20,7 +20,7 @@ background-size: 30px 30px;
 
 .bus_table_line { min-width:130px; vertical-align:top; min-height:1px; overflow:auto;}
 
-.bus_table_destination {color:#ffffff; width:100%; border-left:10px solid #000; border-right:10px solid #000; padding-left:10px; padding-right:10px; letter-spacing:1px; vertical-align:middle;}
+.bus_table_destination {background-color: #666; color:#ffffff; width:100%; border-left:10px solid #000; border-right:10px solid #000; padding-left:10px; padding-right:10px; letter-spacing:1px; vertical-align:middle;}
 td.bus_table_destination h4 		{ font-size:180%; font-weight:bold; padding:0; margin:0; }
 td.bus_table_destination_small h4 	{ font-size:140%; font-weight:bold; padding:0; margin:0; }
 td.bus_table_destination h3 		{ font-size:100%; font-weight:bold; padding:0; margin:0 0 5px 0; }
@@ -39,11 +39,13 @@ td.bus_table_upcoming h4 { font-size:130%; color:#fff; margin:0; padding:7px 0 0
 
 /* agency colors */
 
+.bus_line { background: #666;}
 .bus_line_wmata { background: #105cb6;}
 .bus_line_ART { background: #009370;}
 .bus_line_Circulator { background: #CC3333;}
 .bus_line_pgc { background: #FFCC33;}
-.bus_line_umd { background: #FF0000;} 
+.bus_line_umd { background: #FF0000;}
+.bus_line_rideon {background: #1677C7; }
 
 .bus_line_circ_logo {  background-image:url("../images/circ_logo_trans.png");
 background-size:80px;

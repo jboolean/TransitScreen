@@ -26,8 +26,9 @@ class Screen_model extends CI_Model {
   var $lat = 0;
   var $lon = 0;
   var $wmata_key = '';
+  var $rideon_key = '';
   var $user_id = 0;
-  
+
   // These correspond to the related records in the blocks and agency_stop tables
   var $stop_ids = array();
   var $pair_ids = array();
@@ -65,7 +66,7 @@ class Screen_model extends CI_Model {
   public function load_model($id){
     $this->id = $id;
     //Query the screen data
-    $this->db->select('id, name, MoTh_op, MoTh_cl, Fr_op, Fr_cl, Sa_op, Sa_cl, Su_op, Su_cl, screen_version, zoom, lat, lon, wmata_key');
+    $this->db->select('id, name, MoTh_op, MoTh_cl, Fr_op, Fr_cl, Sa_op, Sa_cl, Su_op, Su_cl, screen_version, zoom, lat, lon, wmata_key, rideon_key');
     $q = $this->db->get_where('screens',array('id' => $id));
 
     if ($q->num_rows() > 0) {
@@ -83,7 +84,7 @@ class Screen_model extends CI_Model {
 
     //Place the data into the arrays of this object
     if ($q->num_rows() > 0) {
-      foreach($q->result() as $row){                
+      foreach($q->result() as $row){
         $serialstops = $this->_assemble_stops($row->id);
 
         $newidrow[$row->id] = $row->stop;
@@ -140,18 +141,18 @@ class Screen_model extends CI_Model {
         $output[$row->id] = $rowarray;
       }
     }
-    // Return an array containing the agency names, their stops, and any lines that 
+    // Return an array containing the agency names, their stops, and any lines that
     // should be excluded.
     return $output;
   }
 
   /**
    * Function: get_screens_by_user_id
-   * 
+   *
    * @param int $id - the user_id of the screen owner
    * @return array
    *
-   * Get a listing of all the screens and return them in an array.  Eventually this 
+   * Get a listing of all the screens and return them in an array.  Eventually this
    * function should differentiate between users since different users will have access
    * only to their respective screens.
    *
@@ -184,7 +185,7 @@ class Screen_model extends CI_Model {
    */
   public function get_screen_values($id, $separate_excl = false) {
     // Get all the screen's configuration values
-    $this->db->select('id, MoTh_op, MoTh_cl, Fr_op, Fr_cl, Sa_op, Sa_cl, Su_op, Su_cl, name, screen_version, zoom, lat, lon, wmata_key');
+    $this->db->select('id, MoTh_op, MoTh_cl, Fr_op, Fr_cl, Sa_op, Sa_cl, Su_op, Su_cl, name, screen_version, zoom, lat, lon, wmata_key, rideon_key');
     if($id == 0){
       $q = $this->db->get('screens',1);
     }
@@ -220,7 +221,7 @@ class Screen_model extends CI_Model {
           $stoppairs = $this->_assemble_stops($row->id, $separate_excl);
           foreach($stoppairs as $pairing){
             $stopstring .= implode(':',$pairing) . ';';
-          }          
+          }
 
           $row->stop = $stoppairs;
           $data['blocks'][] = $row;
@@ -262,11 +263,12 @@ class Screen_model extends CI_Model {
       'lat'             => $this->lat,
       'lon'             => $this->lon,
       'wmata_key'       => $this->wmata_key,
+      'rideon_key'      => $this->rideon_key,
       'user_id'         => $this->user_id
     );
-    
+
     if($create){
-      $this->db->insert('screens',$data);      
+      $this->db->insert('screens',$data);
     }
     else {
       $this->db->where('id', $this->id);
@@ -336,14 +338,14 @@ class Screen_model extends CI_Model {
       );
 
       // If the user saved the block as empty, delete it.
-      if(strlen(trim($value)) == 0 && strlen(trim($blockdata['custom_name'])) == 0){        
+      if(strlen(trim($value)) == 0 && strlen(trim($blockdata['custom_name'])) == 0){
         $this->db->delete('agency_stop', array('block_id' => $key));
         $this->db->delete('blocks', array('id' => $key));
       }
       else {         // Otherwise update the block with updated settings
         $this->db->where('id', $key);
         $this->db->update('blocks', $blockdata);
-      }      
+      }
     }
 
     // For each of the new blocks, create an array with the new blocks' values
@@ -351,7 +353,7 @@ class Screen_model extends CI_Model {
     foreach($this->new_stop_ids as $key => $value){
       unset($blockdata);
       if(strlen(trim($value)) > 0){
-        $blockdata = array (          
+        $blockdata = array (
           'custom_name' => $this->new_stop_names[$key],
           'screen_id'   => $this->id,
           'column'      => $this->new_stop_columns[$key],
@@ -359,9 +361,9 @@ class Screen_model extends CI_Model {
           'custom_body' => $this->new_stop_custom_bodies[$key],
           'limit'       => $this->new_stop_limits[$key]
         );
-        
+
         $this->db->insert('blocks', $blockdata);
-        $newid = $this->db->insert_id();        
+        $newid = $this->db->insert_id();
 
         $stops = explode(';',$value);
         foreach($stops as $stop){
@@ -374,7 +376,7 @@ class Screen_model extends CI_Model {
           $this->db->insert('agency_stop',$newstop);
         }
       }
-    }        
+    }
   }
 
   /**
@@ -461,30 +463,30 @@ class Screen_model extends CI_Model {
 
     foreach($hours as $key => $value){
       $hours[$key] = (int) str_replace(':','',$value);
-    }   
+    }
 
     // If yesterday's close is early in this morning and the current
     // time is in the morning just before that time, sleep = false
-    if($hours['yesterday_close'] < $morningdivide && $time < $hours['yesterday_close']){      
-      return false;      
+    if($hours['yesterday_close'] < $morningdivide && $time < $hours['yesterday_close']){
+      return false;
     }
-    
+
     // If it's after opening time...
-    
-    if($time >= $hours['open']){    
-      
+
+    if($time >= $hours['open']){
+
       // If the closing time is early the next morning, sleep = false
       if($hours['close'] < $morningdivide){
         return false;
       }
-      
+
       // If the current time after close, sleep = true
       if($time > $hours['close']){
         return true;
       }
-      
-      // In all other cases, e.g. most daytime hours, sleep = false      
-      return false;      
+
+      // In all other cases, e.g. most daytime hours, sleep = false
+      return false;
     }
     else {
       return true;

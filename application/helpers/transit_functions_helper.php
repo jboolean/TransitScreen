@@ -127,14 +127,14 @@ function combine_agencies(array $busgroups, $max = 99) {
  *
  *
  */
-function get_bus_predictions($stop_id,$api_key,$agency) {
+function get_bus_predictions($stop_id,$keys,$agency) {
   $out = '';
 
   // Call the different API function based on the agency name.
   switch ($agency) {
     case 'wmata':
     case 'metrobus':
-      $out = get_metrobus_predictions($stop_id, $api_key);
+      $out = get_metrobus_predictions($stop_id, $keys['wmata']);
       break;
     case 'dc-circulator':
     case 'circulator':
@@ -148,6 +148,9 @@ function get_bus_predictions($stop_id,$api_key,$agency) {
       break;
     case 'art':
       $out = get_connexionz_predictions($stop_id, 'art');
+      break;
+    case 'rideon':
+      $out = get_rideon_predictions($stop_id, $keys['rideon']);
       break;
   }
 
@@ -188,6 +191,48 @@ function get_metrobus_predictions($stop_id,$api_key){
 
   // Return the array of predictions.
   return $out;
+}
+
+//The RideOn server is very experimental and not production-ready.
+// The official RideOn API is broken
+function get_rideon_predictions($stop_id, $api_key) {
+  return get_oba_predictions($stop_id, 'rideon.julianboilen.com:8080', $api_key);
+}
+
+function get_oba_predictions($stop_id, $deployment, $api_key) {
+  $out = [];
+
+  $busxml = simplexml_load_file("http://$deployment/api/where/arrivals-and-departures-for-stop/$stop_id.xml?minutesBefore=0&key=$api_key");
+
+  if (!($busxml)) {
+    return false;
+  }
+
+  $busxml = $busxml->data;
+
+  $stop = $busxml->xpath("//references/stops/stop[id = '$stop_id']")[0];
+  $stop_name = (string) $stop->name;
+  $out = [];
+  foreach ($busxml->entry->arrivalsAndDepartures->arrivalAndDeparture as $visit) {
+    $stopTime = $visit->predictedDepartureTime;
+    if ($stopTime == 0) {
+      $stopTime = $visit->scheduledDepartureTime;
+    }
+    $routeId = $visit->routeId;
+    $route = $busxml->xpath("//references/routes/route[id = '$routeId']")[0];
+    $agencyId = (string) $route->agencyId;
+    $agency = $busxml->xpath("//references/agencies/agency[id = '$agencyId']")[0];
+
+    $newitem['stop_name'] = $stop_name;
+    $newitem['agency'] = (string) $agency->name;
+    $newitem['route'] = (string) $visit->routeShortName;
+    $newitem['destination'] = (string) $visit->tripHeadsign;
+    $newitem['prediction'] = (int) round(((float)$stopTime - ((float)time() * 1000))/(60*1000));
+    $out[] = $newitem;
+  }
+
+  return $out;
+
 }
 
 /**

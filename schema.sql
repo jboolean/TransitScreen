@@ -31,7 +31,7 @@ SET default_with_oids = false;
 
 --
 -- TOC entry 142 (class 1259 OID 34959)
--- Name: agency_stop; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: agency_stop; Type: TABLE; Schema: public; Owner: postgres; Tablespace:
 --
 
 CREATE TABLE agency_stop (
@@ -71,7 +71,7 @@ ALTER SEQUENCE agency_stop_id_seq OWNED BY agency_stop.id;
 
 --
 -- TOC entry 144 (class 1259 OID 34964)
--- Name: blocks; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: blocks; Type: TABLE; Schema: public; Owner: postgres; Tablespace:
 --
 
 CREATE TABLE blocks (
@@ -114,7 +114,7 @@ ALTER SEQUENCE blocks_id_seq OWNED BY blocks.id;
 
 --
 -- TOC entry 146 (class 1259 OID 34973)
--- Name: ci_sessions; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ci_sessions; Type: TABLE; Schema: public; Owner: postgres; Tablespace:
 --
 
 CREATE TABLE ci_sessions (
@@ -130,7 +130,7 @@ ALTER TABLE public.ci_sessions OWNER TO postgres;
 
 --
 -- TOC entry 147 (class 1259 OID 34982)
--- Name: screens; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: screens; Type: TABLE; Schema: public; Owner: postgres; Tablespace:
 --
 
 CREATE TABLE screens (
@@ -151,7 +151,8 @@ CREATE TABLE screens (
     last_checkin timestamp without time zone,
     lat numeric,
     lon numeric,
-    wmata_key text
+    wmata_key text,
+    rideon_key text
 );
 
 
@@ -192,7 +193,7 @@ ALTER SEQUENCE screens_id_seq OWNED BY screens.id;
 
 --
 -- TOC entry 149 (class 1259 OID 34991)
--- Name: users; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: users; Type: TABLE; Schema: public; Owner: postgres; Tablespace:
 --
 
 CREATE TABLE users (
@@ -263,7 +264,7 @@ ALTER TABLE ONLY users ALTER COLUMN id SET DEFAULT nextval('users_id_seq'::regcl
 
 --
 -- TOC entry 1816 (class 2606 OID 35002)
--- Name: agency_stop_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: agency_stop_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace:
 --
 
 ALTER TABLE ONLY agency_stop
@@ -272,7 +273,7 @@ ALTER TABLE ONLY agency_stop
 
 --
 -- TOC entry 1819 (class 2606 OID 35004)
--- Name: blocks_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: blocks_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace:
 --
 
 ALTER TABLE ONLY blocks
@@ -281,7 +282,7 @@ ALTER TABLE ONLY blocks
 
 --
 -- TOC entry 1822 (class 2606 OID 35006)
--- Name: ci_sessions_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ci_sessions_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace:
 --
 
 ALTER TABLE ONLY ci_sessions
@@ -290,7 +291,7 @@ ALTER TABLE ONLY ci_sessions
 
 --
 -- TOC entry 1825 (class 2606 OID 35008)
--- Name: screens_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: screens_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace:
 --
 
 ALTER TABLE ONLY screens
@@ -299,7 +300,7 @@ ALTER TABLE ONLY screens
 
 --
 -- TOC entry 1827 (class 2606 OID 35010)
--- Name: users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace:
 --
 
 ALTER TABLE ONLY users
@@ -308,7 +309,7 @@ ALTER TABLE ONLY users
 
 --
 -- TOC entry 1817 (class 1259 OID 35011)
--- Name: fki_blocks_agency_stop; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: fki_blocks_agency_stop; Type: INDEX; Schema: public; Owner: postgres; Tablespace:
 --
 
 CREATE INDEX fki_blocks_agency_stop ON agency_stop USING btree (block_id);
@@ -316,7 +317,7 @@ CREATE INDEX fki_blocks_agency_stop ON agency_stop USING btree (block_id);
 
 --
 -- TOC entry 1820 (class 1259 OID 35012)
--- Name: fki_screens_blocks; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: fki_screens_blocks; Type: INDEX; Schema: public; Owner: postgres; Tablespace:
 --
 
 CREATE INDEX fki_screens_blocks ON blocks USING btree (screen_id);
@@ -324,7 +325,7 @@ CREATE INDEX fki_screens_blocks ON blocks USING btree (screen_id);
 
 --
 -- TOC entry 1823 (class 1259 OID 35013)
--- Name: last_activity_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: last_activity_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace:
 --
 
 CREATE INDEX last_activity_idx ON ci_sessions USING btree (last_activity);

@@ -255,6 +255,9 @@ function get_suffix(route, agency){
 
   if(agency == 'Metrobus') {
     return 'wmata';
+
+  } else if (agency === 'Montgomery County MD Ride On') {
+    return 'rideon';
   }
 
   return agency;
