@@ -11,10 +11,17 @@
  *
  */
 function clean_destination($s){
+  // Make ALL CAPS more paletable
+  if (preg_match('/[\WA-Z]+/', $s)) {
+    $s = ucwords(strtolower($s));
+  }
+
   $s = str_replace('North to ','',$s);
   $s = str_replace('South to ','',$s);
   $s = str_replace('East to ','',$s);
   $s = str_replace('West to ','',$s);
+
+  $s = str_replace(' + ', ' & ', $s);
 
   //$s = str_replace('Station','',$s);
   $s = str_replace('Square','Sq',$s);
