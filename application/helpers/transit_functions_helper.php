@@ -232,7 +232,7 @@ function get_rideon_predictions($stop_id, $api_key) {
 function get_oba_predictions($stop_id, $deployment, $api_key) {
   $out = [];
 
-  $busxml = simplexml_load_file("http://$deployment/api/where/arrivals-and-departures-for-stop/$stop_id.xml?minutesBefore=0&key=$api_key");
+  $busxml = simplexml_load_file("http://$deployment/api/where/arrivals-and-departures-for-stop/$stop_id.xml?minutesBefore=0&minutesAfter=60&key=$api_key");
 
   if (!($busxml)) {
     return false;
