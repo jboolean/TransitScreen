@@ -301,7 +301,7 @@ function get_nextbus_predictions($stop_id,$agency_tag){
   //foreach predictions
   foreach($busxml->predictions as $pred){
     $stopname = (string) $pred->attributes()->stopTitle;
-    $routename = (string) $pred->attributes()->routeTitle;
+    $routename = (string) $pred->attributes()->routeTag;
     //foreach direction
     foreach($pred->direction as $dir){
       $destination = (string) $dir->attributes()->title;
@@ -311,7 +311,7 @@ function get_nextbus_predictions($stop_id,$agency_tag){
         $newitem['stop_name'] = $stopname;
         $newitem['agency'] = $agency;
         $newitem['route'] = $routename;
-        $newitem['destination'] = $routename . ' (' . $destination . ')';
+        $newitem['destination'] = $destination;
         $newitem['prediction'] = (int) $p['minutes'];
         $out[] = $newitem;
       }

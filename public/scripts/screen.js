@@ -58,28 +58,9 @@ function generate_blocks() {
             railsuffix = '';
           }
 
-          if(class_suffix == 'ART'){
-            logoclass = ' bus_line_art_logo';
-          }
-          else if(class_suffix == 'Circulator'){
-            logoclass = ' bus_line_circ_logo';
-            vehicle.route = '&nbsp;';
-          }
-          else if(class_suffix == 'pgc'){
-            logoclass = ' bus_line_pgc_logo';
-            vehicle.route = '&nbsp;';
-          }
-          else if(class_suffix == 'umd'){
-            logoclass = ' bus_line_umd_logo';
-            vehicle.route = '&nbsp;';
-          }
-          else {
-            logoclass = '';
-          }
-
           vout += '   <tr class="' + classname_base + '_table_module" id="block-' + blocks[key].id + '-vehicle-' + v + '">';
           vout += '     <td class="' + classname_base + '_table_line">';
-          vout += '       <div class="' + classname_base + '_line ' + classname_base + '_line_' + class_suffix + logoclass + '">';
+          vout += '       <div class="' + classname_base + '_line ' + classname_base + '_line_' + class_suffix + '">';
           vout += '         <h3>' + vehicle.route + '</h3>';
           vout += '       </div>';
           vout += '     </td>';
