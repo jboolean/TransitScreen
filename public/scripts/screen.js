@@ -84,7 +84,7 @@ function generate_blocks() {
           vout += '       </div>';
           vout += '     </td>';
           vout += '     <td class="' + classname_base + '_table_destination ' + classname_base + '_line_' + class_suffix + railsuffix + '">';
-          vout += split_destination(vehicle.agency, vehicle.destination);
+          vout += get_heading(vehicle);
           vout += '     </td>';
           $.each(vehicle.predictions, function(p, prediction) {
             // 1st prediction
@@ -210,29 +210,38 @@ function translate_class_name(jsonname){
   }
 }
 
-function split_destination(agency, input){
-  if(agency == 'Metrobus'){
-    switch(input.substring(0,8)){
-      case 'North to':
-        direction = '<h3>Northbound to:</h3>';
-        break;
-      case 'South to':
-        direction = '<h3>Southbound to:</h3>';
-        break;
-      case 'East to ':
-        direction = '<h3>Eastbound to:</h3>';
-        break;
-      case 'West to ':
-        direction = '<h3>Westbound to:</h3>';
-        break;
-    }
-    return direction + '<h4>' + input.substring(8) + '</h4>';
+function get_heading(vehicle){
+  var destination = vehicle.destination;
+  var agency = vehicle.agency;
+
+  var output = '';
+
+  var dirText = direction_text(vehicle.direction);
+  if (dirText) {
+    output += '<h3>' + dirText + '</h3>';
   }
-  else if(agency == 'metrorail'){
-      return '<h3>' + input + '</h3>';
+
+  if(agency == 'metrorail'){
+    output += '<h3>' + destination + '</h3>';
+  } else {
+    output += '<h4>' + destination + '</h4>';
   }
-  else {
-    return '<h4>' + input + '</h4>';
+
+  return output;
+}
+
+function direction_text(direction) {
+  switch(direction){
+    case 'E':
+      return 'Eastbound to:';
+    case 'S':
+      return 'Southbound to:';
+    case 'N':
+      return 'Northbound to:';
+    case 'W':
+      return 'Westbound to:';
+    default:
+      return null;
   }
 }
 

@@ -35,6 +35,17 @@ function clean_destination($s){
   return $s;
 }
 
+function get_full_direction_text($shortDirection) {
+  $FULL_DIRECTIONS = [
+    'N' => 'North',
+    'S' => 'South',
+    'E' => 'East',
+    'W' => 'West'
+  ];
+  return $FULL_DIRECTIONS[$shortDirection];
+}
+
+
 /**
  * Function: get_rail_predictions
  * @param int $station_id - the WMATA station id
@@ -111,8 +122,9 @@ function combine_agencies(array $busgroups, $max = 99) {
     $p[$key] = $row['prediction'];
     $a[$key] = $row['agency'];
     $s[$key] = $row['stop_name'];
+    $i[$key] = $row['direction'];
   }
-  array_multisort($p, SORT_ASC, $r, SORT_DESC, $d, SORT_ASC, $combined);
+  array_multisort($p, SORT_ASC, $r, SORT_DESC, $d, SORT_ASC, $i, SORT_DESC, $combined);
 
   return $combined;
 }
@@ -181,10 +193,27 @@ function get_metrobus_predictions($stop_id,$api_key){
 
   // Add the predictions into an array
   for($b = 0; $b < $limit; $b++){
+    $rollsign = (string) $predictions[$b]->DirectionText;
+    $direction = '';
+    if (strpos($rollsign, 'North to') == 0) {
+      $direction = 'N';
+      $rollsign = substr($rollsign, 9);
+    } else if (strpos($rollsign, 'South to') == 0) {
+      $direction = 'S';
+      $rollsign = substr($rollsign, 9);
+    } else if (strpos($rollsign, 'East to') == 0) {
+      $direction = 'E';
+      $rollsign = substr($rollsign, 8);
+    } else if (strpos($rollsign, 'West to') == 0) {
+      $direction = 'W';
+      $rollsign = substr($rollsign, 8);
+    }
+
     $newitem['stop_name'] = $stop_name;
     $newitem['agency'] = 'Metrobus';
     $newitem['route'] = (string) $predictions[$b]->RouteID;
-    $newitem['destination'] = (string) $predictions[$b]->DirectionText;
+    $newitem['destination'] = $rollsign;
+    $newitem['direction'] = $direction;
     $newitem['prediction'] = (int) $predictions[$b]->Minutes;
     $out[] = $newitem;
   }
@@ -199,6 +228,7 @@ function get_rideon_predictions($stop_id, $api_key) {
   return get_oba_predictions($stop_id, 'rideon.julianboilen.com:8080', $api_key);
 }
 
+// any OneBusAway deployment
 function get_oba_predictions($stop_id, $deployment, $api_key) {
   $out = [];
 
@@ -212,6 +242,7 @@ function get_oba_predictions($stop_id, $deployment, $api_key) {
 
   $stop = $busxml->xpath("//references/stops/stop[id = '$stop_id']")[0];
   $stop_name = (string) $stop->name;
+
   $out = [];
   foreach ($busxml->entry->arrivalsAndDepartures->arrivalAndDeparture as $visit) {
     $stopTime = $visit->predictedDepartureTime;
@@ -228,6 +259,7 @@ function get_oba_predictions($stop_id, $deployment, $api_key) {
     $newitem['route'] = (string) $visit->routeShortName;
     $newitem['destination'] = (string) $visit->tripHeadsign;
     $newitem['prediction'] = (int) round(((float)$stopTime - ((float)time() * 1000))/(60*1000));
+    $newitem['direction'] = (string) $stop->direction;
     $out[] = $newitem;
   }
 

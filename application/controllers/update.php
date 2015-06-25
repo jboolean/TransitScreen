@@ -339,6 +339,7 @@ class Update extends CI_Controller {
           'agency'      =>  $predictions[$p]['agency'],
           'route'       =>  $predictions[$p]['route'],
           'destination' =>  $predictions[$p]['destination'],
+          'direction'   =>  $predictions[$p]['direction'],
           'predictions' =>  array(0 => $predictions[$p]['prediction'])
           );
       }
