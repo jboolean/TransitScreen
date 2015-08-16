@@ -67,7 +67,15 @@ function get_rail_predictions($station_id, $api_key){
   $trains = array();
 
   // Load the train prediction XML from the API
-  $railxml = simplexml_load_file("http://api.wmata.com/StationPrediction.svc/GetPrediction/$station_id?api_key=$api_key");
+  $url = "http://api.wmata.com/StationPrediction.svc/GetPrediction/$station_id?api_key=$api_key";
+  $railxml;
+  try {
+    $railxml = load_remote_xml($url);
+  } catch (RemoteLoadException $e) {
+    error_log($e);
+    return [];
+  }
+
   $predictions = $railxml->Trains->AIMPredictionTrainInfo;
 
   // For each prediction, put the data into an array to return
@@ -190,9 +198,16 @@ function get_bus_predictions($stop_id,$keys,$agency) {
 function get_metrobus_predictions($stop_id,$api_key){
   $out = [];
   // Call the API
-  if(!($busxml = simplexml_load_file("http://api.wmata.com/NextBusService.svc/Predictions?StopID=$stop_id&api_key=$api_key"))){
-    return false;
+  $url = "http://api.wmata.com/NextBusService.svc/Predictions?StopID=$stop_id&api_key=$api_key";
+
+  $busxml;
+  try {
+    $busxml = load_remote_xml($url);
+  } catch (RemoteLoadException $e) {
+    error_log($e);
+    return $out;
   }
+
   $stop_name = (string) $busxml->StopName;
   $predictions = $busxml->Predictions->NextBusPrediction;
 
@@ -239,10 +254,13 @@ function get_rideon_predictions($stop_id, $api_key) {
 function get_oba_predictions($stop_id, $deployment, $api_key) {
   $out = [];
 
-  $busxml = simplexml_load_file("http://$deployment/api/where/arrivals-and-departures-for-stop/$stop_id.xml?minutesBefore=0&minutesAfter=60&key=$api_key");
-
-  if (!($busxml)) {
-    return false;
+  $url = "http://$deployment/api/where/arrivals-and-departures-for-stop/$stop_id.xml?minutesBefore=0&minutesAfter=60&key=$api_key";
+  $busxml;
+  try {
+    $busxml = load_remote_xml($url);
+  } catch (RemoteLoadException $e) {
+    error_log($e);
+    return $out;
   }
 
   $busxml = $busxml->data;
@@ -291,19 +309,26 @@ function get_oba_predictions($stop_id, $deployment, $api_key) {
  */
 function get_nextbus_predictions($stop_id,$agency_tag){
 
+  $out = [];
   if($agency_tag == 'dc-circulator'){
     $agency = 'Circulator';
-    $busxml = simplexml_load_file("http://webservices.nextbus.com/service/publicXMLFeed?command=predictions&a=$agency_tag&stopId=$stop_id");
+    $url = "http://webservices.nextbus.com/service/publicXMLFeed?command=predictions&a=$agency_tag&stopId=$stop_id";
   }
   elseif($agency_tag == 'pgc'){
 	  $agency = 'pgc';
-    $busxml = simplexml_load_file("http://webservices.nextbus.com/service/publicXMLFeed?command=predictions&a=$agency_tag&$stop_id");
+    $url = "http://webservices.nextbus.com/service/publicXMLFeed?command=predictions&a=$agency_tag&$stop_id";
   }
   elseif($agency_tag == 'umd'){
     $agency = 'umd';
-    $busxml = simplexml_load_file("http://webservices.nextbus.com/service/publicXMLFeed?command=predictions&a=$agency_tag&stopId=$stop_id");
+    $url = "http://webservices.nextbus.com/service/publicXMLFeed?command=predictions&a=$agency_tag&stopId=$stop_id";
   }
 
+  try {
+    $busxml = load_remote_xml($url);
+  } catch (RemoteLoadException $e) {
+    error_log($e);
+    return $out;
+  }
 
   //foreach predictions
   foreach($busxml->predictions as $pred){
@@ -342,8 +367,19 @@ function get_nextbus_predictions($stop_id,$agency_tag){
 function get_connexionz_predictions($stop_id,$agency) {
   if($agency == 'art'){
     // Call the XML from the API
-    $busxml = simplexml_load_file("http://realtime.commuterpage.com/RTT/Public/Utility/File.aspx?ContentType=SQLXML&Name=RoutePositionET.xml&PlatformTag=$stop_id");
+    $url = "http://realtime.commuterpage.com/RTT/Public/Utility/File.aspx?ContentType=SQLXML&Name=RoutePositionET.xml&PlatformTag=$stop_id";
     $agency_name = 'ART';
+  } else {
+    return [];
+  }
+
+  $out = [];
+
+  try {
+    $busxml = load_remote_xml($url);
+  } catch (RemoteLoadException $e) {
+    error_log($e);
+    return [];
   }
 
   // Put the predictions into an array
@@ -381,11 +417,18 @@ function get_connexionz_predictions($stop_id,$agency) {
  *
  * Given a CaBi station id, get the station data and return an array with the
  * station status, e.g. number of bikes, number of docks, and the station name.
+ * or FALSE if load failed.
  *
  */
 function get_cabi_status($station_id){
   // Load the XML file for the entire system.
-  $cabixml = simplexml_load_file("http://www.capitalbikeshare.com/stations/bikeStations.xml");
+  $cabixml = "http://www.capitalbikeshare.com/stations/bikeStations.xml";
+  try {
+    $cabixml = load_remote_xml($url);
+  } catch (RemoteLoadException $e) {
+    error_log($e);
+    return FALSE;
+  }
 
   // Find the station with the parameter id and get the data for it.
   $stations = $cabixml->station;
@@ -400,6 +443,36 @@ function get_cabi_status($station_id){
 
   // Return an array with the cabi station data.
   return $cabi;
+}
+
+class RemoteLoadException extends Exception {
+}
+
+function load_remote_xml($url) {
+  $timeStart = time();
+  $ch = curl_init();
+  $timeout = 2;
+  curl_setopt($ch, CURLOPT_URL, $url);
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+  curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
+  curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
+
+  $data = curl_exec($ch);
+  if ($data === FALSE) {
+    throw new RemoteLoadException('Failed to load '.$url);
+  }
+  curl_close($ch);
+  $xml = simplexml_load_string($data);
+
+  if ($xml === FALSE) {
+    throw new RemoteLoadException('Couldn\'t parse '.$url);
+  }
+  $timeElapsed = time() - $timeStart;
+  if ($timeElapsed > 2) {
+    error_log("[Instrumentation] Slow load for url=$url time=$timeElapsed");
+  }
+
+  return $xml;
 }
 
 ?>
