@@ -247,7 +247,7 @@ function get_metrobus_predictions($stop_id,$api_key){
 //The RideOn server is very experimental and not production-ready.
 // The official RideOn API is broken
 function get_rideon_predictions($stop_id, $api_key) {
-  return get_oba_predictions($stop_id, 'rideon.julianboilen.com:8080', $api_key);
+  return get_oba_predictions($stop_id, 'rideon.julianboilen.com', $api_key);
 }
 
 // any OneBusAway deployment
