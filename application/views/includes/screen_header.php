@@ -12,6 +12,7 @@
 
     <script type="text/javascript" src="<?php echo base_url(); ?><?php echo PUBLICDIR; ?>scripts/jquery-1.7.1.min.js"></script>
     <script type="text/javascript" src="<?php echo base_url(); ?><?php echo PUBLICDIR; ?>scripts/jquery.timers-1.2.js"></script>
+    <script type="text/javascript" src="<?php echo base_url(); ?><?php echo PUBLICDIR; ?>scripts/render.js<?php print $appendix; ?>"></script>
     <script type="text/javascript" src="<?php echo base_url(); ?><?php echo PUBLICDIR; ?>scripts/screen.js<?php print $appendix; ?>"></script>
 
     <link rel="stylesheet" href="<?php echo base_url(); ?><?php echo PUBLICDIR; ?>css/reset.css" type="text/css" media="screen">
@@ -59,4 +60,3 @@
 
   </head>
   <body class="total-cols-<?php print $numcols; ?>">
-   
