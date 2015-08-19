@@ -35,7 +35,7 @@ td.bus_table_upcoming h4 { font-size:130%; color:#fff; margin:0; padding:7px 0 0
 
 .bus_module { height:70px; margin-bottom:1%;}
 
-.bus_min { font-size:70%; color:#ffcc33;}
+.bus_min { font-size:70%; color:#ffcc33; text-transform: uppercase;}
 
 /* agency colors */
 

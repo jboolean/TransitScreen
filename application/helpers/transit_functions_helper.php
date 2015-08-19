@@ -42,6 +42,11 @@ function clean_destination($s){
   return $s;
 }
 
+/* Convert minutes from now to seconds since the epoch */
+function future_mins_to_abs_secs($minsFromNow) {
+  return time() + $minsFromNow * 60;
+}
+
 function get_full_direction_text($shortDirection) {
   $FULL_DIRECTIONS = [
     'N' => 'North',
@@ -95,7 +100,7 @@ function get_rail_predictions($station_id, $api_key){
           // $newitem['prediction'] = 0;
           break;
         default:
-          $newitem['prediction'] = (int) $predictions[$t]->Min;
+          $newitem['prediction'] = future_mins_to_abs_secs((int) $predictions[$t]->Min);
           $trains[] = $newitem;
       }
     }
@@ -236,7 +241,7 @@ function get_metrobus_predictions($stop_id,$api_key){
     $newitem['route'] = (string) $predictions[$b]->RouteID;
     $newitem['destination'] = $rollsign;
     $newitem['direction'] = $direction;
-    $newitem['prediction'] = (int) $predictions[$b]->Minutes;
+    $newitem['prediction'] = future_mins_to_abs_secs((int) $predictions[$b]->Minutes);
     $out[] = $newitem;
   }
 
@@ -270,12 +275,12 @@ function get_oba_predictions($stop_id, $deployment, $api_key) {
 
   $out = [];
   foreach ($busxml->entry->arrivalsAndDepartures->arrivalAndDeparture as $visit) {
-    $stopTime = $visit->predictedDepartureTime;
+    // stopTime is predicted time in sec since epoch
+    $stopTime = $visit->predictedDepartureTime / 1000;
     if ($stopTime == 0) {
-      $stopTime = $visit->scheduledDepartureTime;
+      $stopTime = $visit->scheduledDepartureTime / 1000;
     }
-    $minutes = (int) round(((float)$stopTime - ((float)time() * 1000))/(60*1000));
-    if ($minutes < 0) {
+    if ($stopTime < time()) {
       continue;
     }
     $routeId = $visit->routeId;
@@ -287,7 +292,7 @@ function get_oba_predictions($stop_id, $deployment, $api_key) {
     $newitem['agency'] = (string) $agency->name;
     $newitem['route'] = (string) $visit->routeShortName;
     $newitem['destination'] = (string) $visit->tripHeadsign;
-    $newitem['prediction'] = $minutes;
+    $newitem['prediction'] = $stopTime;
     $newitem['direction'] = (string) $stop->direction;
     $out[] = $newitem;
   }
@@ -344,7 +349,7 @@ function get_nextbus_predictions($stop_id,$agency_tag){
         $newitem['agency'] = $agency;
         $newitem['route'] = $routename;
         $newitem['destination'] = $destination;
-        $newitem['prediction'] = (int) $p['minutes'];
+        $newitem['prediction'] = (int) $p['epochTime'];
         $out[] = $newitem;
       }
     }
@@ -391,7 +396,7 @@ function get_connexionz_predictions($stop_id,$agency) {
       $newitem['agency'] = $agency_name;
       $newitem['route'] = (string) $route['RouteNo'];
       $newitem['destination'] = (string) $route['Name'];
-      $newitem['prediction'] = (int) $trip['ETA'];
+      $newitem['prediction'] = future_mins_to_abs_secs((int) $trip['ETA']);
       $out[] = $newitem;
     }
   }

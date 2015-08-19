@@ -6,10 +6,10 @@ var screenversion = 0;  // To be written by php
 var buslimit = 99;      // Bus limit per block
 var firstload = true;
 var UPDATE_FREQUENCY = 30;
+var RERENDER_FREQUENCY = 1;
 var queryurl = '../../update/json/' + screen_id; //e.g. http://localhost/index.php/update/json/1
 
 var blocks = [];    // Array of stop and arrival data
-
 
 function translate_class_name(jsonname){
   switch(jsonname) {
@@ -89,12 +89,9 @@ function get_suffix(route, agency){
   return agency;
 }
 
-function pluralize(num) {
-  if(num != 1){
-    return 'S';
-  }
-  return '';
-}
+var refresh_view = function() {
+  render(blocks);
+};
 
 var refresh_data = function(firstRun){
 
@@ -120,11 +117,6 @@ var refresh_data = function(firstRun){
         thisid = stop.id;
         blocks[thisid] = stop; // Update each block with new data.
       });
-
-      // Call the function to create or recreate the blocks based
-      // on the updated data.
-      render();
-
   })
   .error(function() {
     console.error('Failed to get new data.');
@@ -136,5 +128,8 @@ $(document).ready(function () {
   refresh_data(true);
   // This triggers the data update
   setInterval(refresh_data, UPDATE_FREQUENCY * 1000);
+
+  // This keeps the screen up to date
+  setInterval(refresh_view, RERENDER_FREQUENCY * 1000);
 });
 
