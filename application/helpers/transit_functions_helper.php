@@ -349,7 +349,7 @@ function get_nextbus_predictions($stop_id,$agency_tag){
         $newitem['agency'] = $agency;
         $newitem['route'] = $routename;
         $newitem['destination'] = $destination;
-        $newitem['prediction'] = (int) $p['epochTime'];
+        $newitem['prediction'] = ((int) $p['epochTime'] / 1000);
         $out[] = $newitem;
       }
     }
