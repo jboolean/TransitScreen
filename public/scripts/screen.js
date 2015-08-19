@@ -10,7 +10,10 @@ var queryurl = '../../update/json/' + screen_id; //e.g. http://localhost/index.p
 
 var blocks = [];    // Array of stop and arrival data
 
-function generate_blocks() {
+function render() {
+  // clear everything and re-render.
+  $('.col').empty();
+
   // loop through local data and create templates.
   for(var key in blocks){
     var output = '';
@@ -36,12 +39,6 @@ function generate_blocks() {
 
       // Sometimes insteady of a vehicles array it is the route.
       var vehicles = blocks[key].vehicles;
-      if (!Array.isArray(vehicles)) {
-        // There is no fix, the data are missing, just skip.
-        console.debug(vehicles);
-        vehicles = [];
-        console.debug('Hit vehicles is actually the route bug.');
-      }
 
       $.each(vehicles, function(v,vehicle){
 
@@ -272,95 +269,28 @@ var refresh_data = function(firstRun){
         screenversion = json.screen_version;
       }
 
-      if(!json.sleep) {
-
-        var now = Math.round(Date.now() / 1000);
-
-        //blocks.updated = now; // Set the updated time for the local dataset
-
-        $('#loading-box').remove();
-
-        // For each stop ...
-        $.each(json.stops,function(i,stop){
-          thisid = stop.id;
-          blocks[thisid] = stop; // Update each block with new data.
-          blocks[thisid].updated = now;
-        });
-
-        // Call the function to create or recreate the blocks based
-        // on the updated data.
-        generate_blocks();
-
-        // write the new data to the local data store
-        // add/update a "last updated" property to each object
-
+      if(json.sleep) {
+        $('.col').empty();
+        return;
       }
-      else {                // If the screen should sleep
-        $('.col').empty();  // clear everything out.
-      }
+
+      $('#loading-box').remove();
+
+      // For each stop ...
+      $.each(json.stops,function(i,stop){
+        thisid = stop.id;
+        blocks[thisid] = stop; // Update each block with new data.
+      });
+
+      // Call the function to create or recreate the blocks based
+      // on the updated data.
+      render();
+
   })
-  .error(function() { // This executes if the script cannot get the updated data.
-    // Update the block rendering since the auto-decrementer
-    // will kick in.
-    //generate_blocks();
+  .error(function() {
     console.error('Failed to get new data.');
   });
-
 };
-
-/*
-function time_tracker(id, lastcheck, iteration) {
-  // each minute, automatically decrement each prediction
-  // in the local data.
-  var removeid = new Array();
-  var removevehicle = new Array();
-
-  var now = Math.round(new Date().getTime() / 1000);
-
-  if((now - blocks[id].updated) > 5){
-    console.log('Minute mark');
-    blocks[id].updated = now;
-
-    $.each(blocks[id].vehicles, function(v, vehicle) {
-      removevehicle = new Array();
-      removeid = new Array();
-      $.each(vehicle.predictions, function(p, prediction) {
-
-        if(prediction > 0){
-          blocks[id].vehicles[v].predictions[p]--;
-        }
-        else {
-          // Add the id to the array of ids whose elements
-          // should be removed.
-          removeid.push(p);
-        }
-      });
-
-      removeid.reverse();
-
-      $.each(removeid, function(r, item) {
-        console.log('Remove ' + item);
-        blocks[id].vehicles[v].predictions.splice(item,1);
-      });
-
-      // If the route has no more predictions, remove it.
-      if(blocks[id].vehicles[v].predictions.length == 0){
-        console.log('Remove route ' + blocks[id].vehicles[v].route + ' ' + blocks[id].vehicles[v].destination + ' id: ' + v + ', ' + '#block-' + id + '-vehicle-' + v);
-        $('#block-' + id + '-vehicle-' + v).empty();
-        removevehicle.push(v);
-        //blocks[id].vehicles.splice(v,1);
-      }
-    });
-
-    removevehicle.reverse();
-    console.log('Cleaning up the buses.');
-    $.each(removevehicle, function(rv, bus) {
-      console.log('Now removing bus ' + bus);
-      blocks[id].vehicles.splice(bus,1);
-    });
-  }
-}
-*/
 
 // Do this as the initial load
 $(document).ready(function () {
@@ -368,24 +298,4 @@ $(document).ready(function () {
   // This triggers the data update
   setInterval(refresh_data, UPDATE_FREQUENCY * 1000);
 });
-
-// Run this timer to autodecrement
-/*
-$(document).everyTime(5000, function(){
-  var now = Math.round(new Date().getTime() / 1000);
-
-  for(var key in blocks){
-    // If the block was not updated set the notify the auto-
-    // decrement function.
-
-    if((now - blocks[key].updated) >= (blankout)){
-      blocks.splice(key,1);
-      $('#block-' + key).empty();
-      continue;
-    }
-    if((now - blocks[key].updated) > 4){
-      time_tracker(key, now, 0);
-    }
-  }
-});*/
 
