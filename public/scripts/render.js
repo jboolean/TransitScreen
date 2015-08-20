@@ -8,13 +8,25 @@ var reorder_blocks = function() {
       var compA = $(a).attr('order');
       var compB = $(b).attr('order');
       return (compA < compB) ? -1 : (compA > compB) ? 1 : 0;
-    })
+    });
+
     $.each(listitems, function(idx, itm) { mylist.append(itm); });
   });
 };
 
 var convert_abs_to_future_mins = function(secsSinceEpoch) {
   return Math.round((secsSinceEpoch - Date.now() / 1000) / 60);
+};
+
+var vehicleHasPredictionsInFuture = function(vehicle) {
+  var now = Date.now() / 1000;
+  for (var i = 0; i < vehicle.predictions.length; i++) {
+    if(vehicle.predictions[i] > now) {
+      return true;
+    }
+  }
+
+  return false;
 };
 
 function render(blocks) {
@@ -37,6 +49,12 @@ function render(blocks) {
     // For bus or rail, output data this way
     if(blocks[key].type == 'subway' || blocks[key].type == 'bus'){
 
+      var filteredVehicles = blocks[key].vehicles.filter(vehicleHasPredictionsInFuture);
+
+      if (filteredVehicles.length === 0) {
+        continue;
+      }
+
       output += '<div class="' + containerclass + '">';
       output += ' <div class="' + classname_base + '_location">';
       output += '   <div id="' + classname_base + '_logo"></div>';
@@ -44,25 +62,13 @@ function render(blocks) {
       output += ' </div>';
       output += ' <table id="' + classname_base + '_table">';
 
-      // Sometimes insteady of a vehicles array it is the route.
-      var vehicles = blocks[key].vehicles;
-
-      $.each(vehicles, function(v,vehicle){
+      $.each(filteredVehicles, function(v,vehicle){
 
         var vout = '';
 
-        if(vehicle.predictions.length === 0) {
-          return true;
-        }
-
-        var hasPredictionsInFuture = false;
-        for (var i = 0; i < vehicle.predictions.length && !hasPredictionsInFuture; i++) {
-          hasPredictionsInFuture = vehicle.predictions[i] > (Date.now() / 1000);
-        }
-
-        if (!hasPredictionsInFuture) {
-          return true;
-        }
+        var futurePredictions = vehicle.predictions.filter(function(prediction) {
+          return prediction > (Date.now() / 1000);
+        });
 
         var subsequent = '';
         var class_suffix = get_suffix(vehicle.route, vehicle.agency);
@@ -83,7 +89,7 @@ function render(blocks) {
         vout += '     <td class="' + classname_base + '_table_destination ' + classname_base + '_line_' + class_suffix + railsuffix + '">';
         vout += get_heading(vehicle);
         vout += '     </td>';
-        $.each(vehicle.predictions, function(p, prediction) {
+        $.each(futurePredictions, function(p, prediction) {
           var predictionMins = convert_abs_to_future_mins(prediction);
           // 1st prediction
           if(p == 0) {
