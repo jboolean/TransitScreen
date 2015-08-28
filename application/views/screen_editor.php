@@ -36,10 +36,10 @@
       echo '</div>';
     }
     echo form_fieldset_close();
-    
+
     // Create a field set for the stops
     echo form_fieldset('Stops');
-    
+
     $agencies = array(
         'metrobus'      =>  'Metrobus (WMATA)',
         'metrorail'     =>  'Metrorail (WMATA)',
@@ -49,10 +49,10 @@
         'art'           =>  'ART'
     );
 
-    // Print out block section with space for 9 blocks
+    // Print out block section with space for 20 blocks
     echo '<ol>';
     echo '<div class="column-headers"><span>Stop IDs</span><span>Custom stop name (opt.)</span><span class="header-column">Column</span><span class="header-column">Position</span><span class="header-column-ct">Custom text</span><span>Limit</span></div>';
-    for($r = 0; $r < 9; $r++) {
+    for($r = 0; $r < 20; $r++) {
 
       // Set the options for the columns, positions, and item limits
       for($c = 1; $c < 4; $c++){
@@ -68,7 +68,7 @@
       }
 
       $serialstring = '';
-      $pairids = array();      
+      $pairids = array();
 
       // Write the existing agency-stop pairs to the block boxes
       if(isset($rows['blocks'][$r]->stop)){
@@ -85,7 +85,7 @@
       // Write out the lines for each of the blocks.  Existing blocks are written
       // out first and empty blocks are written out second (in the else{})
       echo '<li class="stop-row">';
-      if(isset($rows['blocks'][$r])){        
+      if(isset($rows['blocks'][$r])){
         //echo form_input('stop_ids[' . $rows['blocks'][$r]->id . ']', $rows['blocks'][$r]->stop);
         echo form_input('stop_ids[' . $rows['blocks'][$r]->id . ']', $serialstring);
         echo form_hidden('pair_ids[' . $rows['blocks'][$r]->id . ']', implode(',', $pairids));
@@ -106,15 +106,15 @@
       echo '</li>';
     }
     echo '</ol>';
-    
+
     echo form_fieldset_close();
 
     echo form_submit('submit', 'Save');
     echo form_close();
   ?>
-  
+
   <?php
     $this->load->view('includes/screen_admin_instructions');
   ?>
-  
+
 </div>
