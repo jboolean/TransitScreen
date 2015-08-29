@@ -57,6 +57,14 @@ function direction_text(direction) {
       return 'Northbound to:';
     case 'W':
       return 'Westbound to:';
+    case 'NE':
+      return 'Northeast to:';
+    case 'NW':
+      return 'Northwest to:';
+    case 'SE':
+      return 'Southeast to:';
+    case 'SW':
+      return 'Southwest to:';
     default:
       return null;
   }
