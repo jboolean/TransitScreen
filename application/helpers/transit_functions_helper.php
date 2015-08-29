@@ -222,16 +222,16 @@ function get_metrobus_predictions($stop_id,$api_key){
   for($b = 0; $b < $limit; $b++){
     $rollsign = (string) $predictions[$b]->DirectionText;
     $direction = '';
-    if (strpos($rollsign, 'North to') == 0) {
+    if (strpos($rollsign, 'North to') === 0) {
       $direction = 'N';
       $rollsign = substr($rollsign, 9);
-    } else if (strpos($rollsign, 'South to') == 0) {
+    } else if (strpos($rollsign, 'South to') === 0) {
       $direction = 'S';
       $rollsign = substr($rollsign, 9);
-    } else if (strpos($rollsign, 'East to') == 0) {
+    } else if (strpos($rollsign, 'East to') === 0) {
       $direction = 'E';
       $rollsign = substr($rollsign, 8);
-    } else if (strpos($rollsign, 'West to') == 0) {
+    } else if (strpos($rollsign, 'West to') === 0) {
       $direction = 'W';
       $rollsign = substr($rollsign, 8);
     }
