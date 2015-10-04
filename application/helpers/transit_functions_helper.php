@@ -456,7 +456,7 @@ class RemoteLoadException extends Exception {
 function load_remote_xml($url) {
   $timeStart = time();
   $ch = curl_init();
-  $timeout = 2;
+  $timeout = 7;
   curl_setopt($ch, CURLOPT_URL, $url);
   curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
   curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
