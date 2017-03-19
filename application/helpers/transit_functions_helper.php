@@ -249,23 +249,44 @@ function get_metrobus_predictions($stop_id,$api_key){
   return $out;
 }
 
-//The RideOn server is very experimental and not production-ready.
-// The official RideOn API is broken
+
 function get_rideon_predictions($stop_id, $api_key) {
-  return get_oba_predictions($stop_id, 'rideon.julianboilen.com', $api_key);
+  // The official RideOn server is a custom API that is often broken… and the docs are down… here goes…
+  $url = "http://rideonrealtime.net/arrivals/$stop_id.xml?auth_token=$api_key";
+
+  $arrival;
+  try {
+    $arrival = load_remote_xml($url);
+  } catch (RemoteLoadException $e) {
+    error_log($e);
+    return [];
+  }
+
+
+  $stop_name = (string) $arrival->stop->stop_name;
+
+  $out = [];
+  foreach ($arrival->calculated_arrivals->calculated_arrival as $calculated_arrival) {    
+    $newitem['stop_name'] = $stop_name;
+    $newitem['agency'] = 'rideon';
+    $newitem['route'] = (string) $calculated_arrival->route->route_short_name;
+    $newitem['destination'] = (string) $calculated_arrival->trip->trip_headsign;
+    $newitem['prediction'] = strtotime((string) $calculated_arrival->calculated_time);
+    $out[] = $newitem;
+  }
+
+  return $out;
 }
 
 // any OneBusAway deployment
 function get_oba_predictions($stop_id, $deployment, $api_key) {
-  $out = [];
-
   $url = "http://$deployment/api/where/arrivals-and-departures-for-stop/$stop_id.xml?minutesBefore=0&minutesAfter=60&key=$api_key";
   $busxml;
   try {
     $busxml = load_remote_xml($url);
   } catch (RemoteLoadException $e) {
     error_log($e);
-    return $out;
+    return [];
   }
 
   $busxml = $busxml->data;
